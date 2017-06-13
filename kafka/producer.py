@@ -17,7 +17,7 @@ class Producer(threading.Thread):
             message = """129.94.144.152 - - [01/Jul/1995:00:00:17 -0400] "GET /images/ksclogo-medium.gif HTTP/1.0" 304 0 {}""".format(i)
             producer.send(topic, message)
             time.sleep(.2)
-            print message + '\n' + 60*'=' + '\n'
+            print message + '\n' + 80*'=' + '\n'
 
 
 if __name__ == "__main__":
@@ -30,4 +30,4 @@ if __name__ == "__main__":
     """
     producer = Producer()
     producer.start()
-    time.sleep(10) # might adjust this later
+    # time.sleep(10) # might adjust this later
