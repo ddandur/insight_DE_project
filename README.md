@@ -2,4 +2,6 @@
 
 ### Memos to myself: 
 
-look into the threading tricks used in the producer file
+### To do: 
+
+look at sleep function in line 19 of producer file - what is point of that?
