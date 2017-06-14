@@ -16,7 +16,7 @@ class Producer(threading.Thread):
             # column appended at end of row
             message = """129.94.144.152 - - [01/Jul/1995:00:00:17 -0400] "GET /images/ksclogo-medium.gif HTTP/1.0" 304 0 {}""".format(i)
             producer.send(topic, message)
-            time.sleep(.2)
+            time.sleep(.2) # what does this do?
             print message + '\n' + 80*'=' + '\n'
 
 
@@ -28,6 +28,6 @@ if __name__ == "__main__":
         level=logging.INFO
         )
     """
-    producer = Producer()
-    producer.start()
+    producer = Producer() # thread instance
+    producer.start() # calls run method
     time.sleep(10) # how many seconds to let producer thread run
