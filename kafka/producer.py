@@ -10,12 +10,12 @@ class Producer(threading.Thread):
 
     def run(topic):
         topic = "NASA-logs"
-        producer = KafkaProducer(bootstrap_servers='localhost:9092')
+        kafka_producer = KafkaProducer(bootstrap_servers='localhost:9092')
         for i in xrange(1000000):
             # for now message is just one NASA log with an extra integer
             # column appended at end of row
             message = """129.94.144.152 - - [01/Jul/1995:00:00:17 -0400] "GET /images/ksclogo-medium.gif HTTP/1.0" 304 0 {}""".format(i)
-            producer.send(topic, message)
+            kafka_producer.send(topic, message)
             time.sleep(.2) # what does this do?
             print message + '\n' + 80*'=' + '\n'
 
