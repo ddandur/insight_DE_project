@@ -5,7 +5,7 @@ import threading
 
 class Producer(threading.Thread):
 
-    # using syntax for threading
+    # daemon threads are summarily killed as soon as main program ends
     daemon = True
 
     def run(topic):
@@ -30,4 +30,5 @@ if __name__ == "__main__":
     """
     producer = Producer() # thread instance
     producer.start() # calls run method
-    time.sleep(10) # how many seconds to let producer thread run
+    time.sleep(10) # how many seconds to let producer thread run, since
+                   # the daemon is killed once main program ends
