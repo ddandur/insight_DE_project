@@ -31,4 +31,4 @@ if __name__ == "__main__":
     producer = Producer() # thread instance
     producer.start() # calls run method
     time.sleep(10) # how many seconds to let producer thread run, since
-                   # the daemon is killed once main program ends
+                   # daemon producer thread is killed once main program ends
