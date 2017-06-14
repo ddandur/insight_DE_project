@@ -30,4 +30,4 @@ if __name__ == "__main__":
     """
     producer = Producer()
     producer.start()
-    # time.sleep(10) # might adjust this later
+    time.sleep(10) # how many seconds to let producer thread run
