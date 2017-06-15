@@ -16,10 +16,10 @@ kafka_stream = KafkaUtils.createDirectStream(ssc,
                                              {"metadata.broker.list": brokers})
 
 # pick out words in each log and print them
-words = kafka_stream.flatMap(lambda line: line.split(" "))
+# words = kafka_stream.flatMap(lambda line: line.split(" "))
                      # .map(lambda word: (word, 1)) \
                      # .reduceByKey(lambda a, b: a+b)
-words.pprint()
+kafka_stream.pprint()
 
 # start stream
 ssc.start()
