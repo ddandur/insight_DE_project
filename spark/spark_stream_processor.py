@@ -3,7 +3,7 @@ from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
 import redis
 
-# set up function to transfer stream to redis database - take from spark streaming documentation 
+# set up function to transfer stream to redis database - take from spark streaming documentation
 # this function can be further optimized by using a pool - see spark documentation
 
 def sendPartition(iter):
@@ -40,8 +40,8 @@ just_words.foreachRDD(lambda rdd: rdd.foreachPartition(sendPartition))
 # redis_table = redis.StrictRedis(host='localhost', port=6379, db=0)
 # redis_table.set(just_words, just_words)
 
-
-
 # start stream
 ssc.start()
 ssc.awaitTermination()
+
+# running command: sudo $SPARK_HOME/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.1.0 spark_stream_processor.py
