@@ -2,6 +2,8 @@ from kafka import KafkaProducer
 import time
 import threading
 # import logging
+from numpy.random import lognormal
+
 
 class Producer(threading.Thread):
 
@@ -9,15 +11,19 @@ class Producer(threading.Thread):
     daemon = True
 
     def run(topic):
-        topic = "NASA-logs"
+        topic = "NASA-logs" # change this later - these monitoring logs are mainly about latencies
         kafka_producer = KafkaProducer(bootstrap_servers='localhost:9092')
         for i in xrange(1000000):
-            # for now message is just one NASA log with an extra integer
-            # column appended at end of row
-            message = """129.94.144.152 - - [01/Jul/1995:00:00:17 -0400] "GET /images/ksclogo-medium.gif HTTP/1.0" 304 0 {}""".format(i)
+            # create message with random latency drawn from lognormal(0,1) distribution
+            message = { 
+            			"id": "{}".format(i), 
+            			"latency": "{}".format(lognormal(1))
+                      }
+       
+            # message = """129.94.144.152 - - [01/Jul/1995:00:00:17 -0400] "GET /images/ksclogo-medium.gif HTTP/1.0" 304 0 {}""".format(i)
             kafka_producer.send(topic, message)
-            time.sleep(.1) # what does this do?
-            print message + '\n' + 80*'=' + '\n'
+            time.sleep(.1)
+            print message + '\n' + 80*'=' + '\n'    	
 
 
 if __name__ == "__main__":
