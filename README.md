@@ -4,4 +4,4 @@
 
 ### To do: 
 
-look at sleep function in line 19 of producer file - what is point of that?
+put flask on amazon 
