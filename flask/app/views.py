@@ -1,6 +1,7 @@
 import os
 from flask import render_template, jsonify, request
 from app import app
+import redis
 # from cassandra.cluster import Cluster
 
 # setting up connections to cassandra
