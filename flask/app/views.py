@@ -16,6 +16,8 @@ redis_db = redis.StrictRedis(host=redis_server, port=6379, db=0)
 def index():
 
     # pull sample data from redis server
+
+    # do simple hello world
     return "Hello, world!"
 
 """
