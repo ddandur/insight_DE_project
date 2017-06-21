@@ -1,7 +1,7 @@
 import os
 from flask import render_template, jsonify, request
 from app import app
-from cassandra.cluster import Cluster
+# from cassandra.cluster import Cluster
 
 # setting up connections to cassandra
 # cluster = Cluster([os.environ["CASSANDRA_IP"]])
