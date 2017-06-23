@@ -2,6 +2,7 @@ import os
 from flask import render_template, jsonify, request
 from app import app
 import redis
+import json
 # from cassandra.cluster import Cluster
 
 # setting up connections to cassandra
@@ -13,13 +14,42 @@ redis_server = 'localhost'
 redis_db = redis.StrictRedis(host=redis_server, port=6379, db=0)
 
 @app.route('/')
-@app.route('/index')
-def index():
+@app.route('/index') # the template that gets rendered needs to have this same name
+# def index():
 
     # pull sample data from redis server
+    # test data is in form of a t-digest
+
+    # sample_list = redis_db.zrange("my.sorted.set", 0, -1, withscores=True)
+    # total_string = " ".join(str(x) for x in sample_list)
+
+    # write to a local csv for data visualization
 
     # do simple hello world
-    return "Hello, world!"
+
+    # extract data from redis
+def index():
+    # user = { 'nickname': 'Miguel' } # fake userq
+    # num_list = [1,2,3,4]
+    # read in list of values from redis
+    # my_dict_list = [json.loads(x) for x in redis_db.lrange('redis_t_digest_second_example',0,-1)]
+    # remove numbers from the json list
+    # centroid_locations = [dicty["centroid"] for dicty in my_dict_list]
+    # for elem in centroid_locations:
+    #     print elem
+    # render the page with template
+    # return render_template("index.html")
+    return render_template("base_bootstrap_template.html")
+
+@app.route('/new_index')
+def new_index():
+    # can do some query here to pass into the plotting function
+    # with render_template call
+    return render_template("new_index.html")
+
+
+if __name__ == "__main__":
+    app.run(debug = True, host='localhost', port=8080, passthrough_errors=True)
 
 """
    user = { 'nickname': 'Miguel' } # fake user
