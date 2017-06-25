@@ -24,7 +24,7 @@ class Producer(threading.Thread):
         for i in xrange(1000000):
             # latencies should be draw from lognormal
             # for testing use one number and then uniform
-            message = json.dumps({'device': random.choice(devices), 'latency': 2})
+            message = json.dumps({'message_num': i, 'device': random.choice(devices), 'latency': 2})
             # message = """129.94.144.152 - - [01/Jul/1995:00:00:17 -0400] "GET /images/ksclogo-medium.gif HTTP/1.0" 304 0 {}""".format(i)
             kafka_producer.send(topic, message)
             time.sleep(.1)
