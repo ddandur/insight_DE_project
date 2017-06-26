@@ -1,7 +1,7 @@
-# insight_DE_project
+# Versatile Percentiles
 
-### Memos to myself: 
+## Fast, Efficient Latency Computations
 
-### To do: 
+This project explores the t-digest data structure, introduced by Ted Dunning (repo here: https://github.com/tdunning/t-digest). 
 
-put flask on amazon 
+The t-digest data structure stores a compressed version of a collection of 1-D data. The structure allows for fast computation of percentiles and is mergeable, allowing for natural parallel computations on a platform like Spark. 
