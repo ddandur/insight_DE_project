@@ -1,7 +1,12 @@
-# insight_DE_project
+# Versatile Percentiles
+## Fast, Efficient Latency Monitoring
 
-### Memos to myself: 
+### Motivation 
 
-### To do: 
+Latency monitoring is of critical importance for any website or application - an annoying user experience can be a death sentence for an otherwise enjoyable app. 
 
-put flask on amazon 
+This project explores an application of the t-digest data structure, introduced by Dunning and Ertl (repo here: https://github.com/tdunning/t-digest). The motivation (one among many)
+
+The t-digest data structure stores a compressed version of a collection of 1-D data. The structure allows for fast computation of percentiles and is mergeable, allowing for natural parallel computations on a platform like Spark. 
+
+### 
