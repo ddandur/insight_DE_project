@@ -9,6 +9,24 @@ import json
 # cluster = Cluster([os.environ["CASSANDRA_IP"]])
 # session = cluster.connect('playground')
 
+###################################################
+# TO START FLASK APP, DO: 
+# sudo -E python tornadoapp.py
+##################################################
+
+##################################################
+# NEXT TO-DO: USE DATA READ FROM REDIS TO DISPLAY 
+# IN HIGHCHART
+#################################################
+
+###################################################
+# CHANGING THE NAME OF NEW_INDEX TO INDEX IN FLASK
+###################################################
+
+
+# views.py READING IN NEW DATA FROM REDIS UPON REFRESH EVERY FEW SECONDS
+# '/new_index' is main domain used
+
 # connect to redis server
 redis_server = 'localhost'
 redis_db = redis.StrictRedis(host=redis_server, port=6379, db=0)
@@ -28,7 +46,7 @@ redis_db = redis.StrictRedis(host=redis_server, port=6379, db=0)
     # do simple hello world
 
     # extract data from redis
-def index():
+# def index():
     # user = { 'nickname': 'Miguel' } # fake userq
     # num_list = [1,2,3,4]
     # read in list of values from redis
@@ -39,12 +57,19 @@ def index():
     #     print elem
     # render the page with template
     # return render_template("index.html")
-    return render_template("base_bootstrap_template.html")
+#    data = redis_db.get("current_digest")
+ #   print data
+  #   return render_template("base_bootstrap_template.html")
 
-@app.route('/new_index')
-def new_index():
+# @app.route('/new_index')
+def index():
     # can do some query here to pass into the plotting function
     # with render_template call
+    data = redis_db.get("current_digest")
+    print data
+    print "#"*80
+    print "LENGTH OF DATA:", len(data)
+    print "#"*80
     return render_template("new_index.html")
 
 
