@@ -1,0 +1,75 @@
+{% extends "base_bootstrap_template.html" %}
+{% block new_index %}
+
+<h1>Latency T-Digest</h1>
+
+<div id="container" style="min-width: 300px; height: 600px; margin: 0 auto"></div>
+
+<script>
+
+
+Highcharts.chart('container', {
+
+title: {
+    text: 'Latency Values by Percentile'
+},
+
+/*
+subtitle: {
+    text: 'Source: thesolarfoundation.com'
+},
+*/
+
+xAxis: {
+    title: {
+        text: 'Percentile'
+    }
+},
+
+yAxis: {
+    title: {
+        text: 'Latency Value'
+    }
+},
+legend: {
+    layout: 'vertical',
+    align: 'right',
+    verticalAlign: 'middle'
+},
+
+plotOptions: {
+    series: {
+        pointStart: 0, // set to 0 to start percentiles
+        pointInterval: 5 // set to 5 to increment between percentiles
+    }
+},
+
+series: [{
+    name: 'T-Digest',
+    data: [{{digest[0]|tojson}},
+    {{digest[1]|tojson}},
+    {{digest[2]|tojson}},
+    {{digest[3]|tojson}},
+    {{digest[4]|tojson}},
+    {{digest[5]|tojson}},
+    {{digest[6]|tojson}},
+    {{digest[7]|tojson}},
+    {{digest[8]|tojson}},
+    {{digest[9]|tojson}},
+    {{digest[10]|tojson}},
+    {{digest[11]|tojson}},
+    {{digest[12]|tojson}},
+    {{digest[13]|tojson}},
+    {{digest[14]|tojson}},
+    {{digest[15]|tojson}},
+    {{digest[16]|tojson}},
+    {{digest[17]|tojson}},
+    {{digest[18]|tojson}},
+    {{digest[19]|tojson}}]
+}]
+
+});
+</script>
+
+
+{% endblock %}

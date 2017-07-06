@@ -11,7 +11,7 @@
             type: 'column'
         },
         title: {
-            text: '(Real time)'
+            text: {{digest|tojson}} // this seems to be tuple
         },
         xAxis: {
             type: 'category',
@@ -37,24 +37,47 @@
         },
         series: [{
             name: 'Population',
-            data: [
-                [0.1, 10],
-                [0.2, 14],
-		[0.3, 16], 
-		[0.4, 20], 
-		[0.5, 27], 
-		[0.6, 40], 
-		[0.7, 47], 
-		[0.8, 59], 
-		[0.9, 78], 
-		[1.0, 82], 
-		[1.1, 89], 
-		[1.2, 91], 
-		[1.3, 95], 
-		[1.4, 98], 
-		[1.5, 99], 
-		[1.6, 99.9]  
-            ],
+            data: /*[{{digest|tojson}}[0],
+                   {{digest|tojson}}[1],
+                   {{digest|tojson}}[2],
+                   {{digest|tojson}}[3]]*/
+
+
+            [
+              {{digest[0]|tojson}},
+              {{digest[1]|tojson}},
+              {{digest[2]|tojson}},
+              {{digest[3]|tojson}},
+              {{digest[4]|tojson}},
+              {{digest[5]|tojson}},
+              {{digest[6]|tojson}},
+              {{digest[7]|tojson}},
+              {{digest[8]|tojson}},
+              {{digest[9]|tojson}},
+              {{digest[10]|tojson}},
+              {{digest[11]|tojson}},
+              {{digest[12]|tojson}},
+              {{digest[13]|tojson}},
+              {{digest[14]|tojson}},
+              {{digest[15]|tojson}},
+              {{digest[16]|tojson}},
+              {{digest[17]|tojson}},
+              {{digest[18]|tojson}},
+              {{digest[19]|tojson}}
+            ]
+
+
+                /*
+                [[0.971, 10],
+                [0.981, 14],
+                [0.982, 16],
+                [0.986, 20],
+                [0.989, 27],
+                [0.9899, 40]]
+                */
+
+
+            ,
             dataLabels: {
                 enabled: false,
                 rotation: -90,
