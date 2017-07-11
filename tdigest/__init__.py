@@ -1,1 +1,1 @@
-from .tdigest import TDigest
+from .tdigest_altered import TDigest

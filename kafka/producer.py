@@ -1,47 +1,81 @@
+"""
+Kafka producer file.
+
+Produces a simple stream of simulated latency data.
+Latency values follow a standard lognormal distribution.
+
+In a more realistic setting the latency values would be
+computed from a join operation on some sort of ID,
+e.g. a join that gives ad impression time and click-through
+time for a given user, or a join that gives time between
+a request to and response from a server.
+
+The T-Digest data structure can of course summarize any
+1-D distribution of scalar values - latencies are only
+used as an example.
+"""
+
 from kafka import KafkaProducer
-import time
-import threading
-# import logging
 import json
 import random
+import threading
+import time
+from numpy.random import lognormal
 
-from numpy.random import lognormal, uniform
+###############################
+# Kafka producer parameters
+###############################
+
+topic = 'Latency'
+bootstrap_servers = 'localhost:9092'
+run_time = 500 # run time in seconds
+msgs_per_second = 50 # message per second
+
+###############################
+###############################
+
+# compute pause_time between messages and total_num_msgs
+pause_time = 1/float(msgs_per_second)
+num_messages = run_time*msgs_per_second
 
 
 class Producer(threading.Thread):
 
-    # daemon threads are summarily killed as soon as main program ends
-    daemon = True
+    daemon = True # daemon thread killed after run_time seconds
 
-    def run(topic):
-        topic = "NASA-logs" # change this later - these monitoring logs are mainly about latencies
-        kafka_producer = KafkaProducer(bootstrap_servers='localhost:9092')
+    def __init__(self, topic, bootstrap_servers, num_messages, pause_time):
+        threading.Thread.__init__(self)
+        self.topic = topic
+        self.bootstrap_servers = bootstrap_servers
+        self.num_messages = num_messages
+        self.pause_time = pause_time
 
-        # devices that latencies come from
-        devices = ['type1', 'type2', 'type3', 'type4']
+    def run(self):
 
-        # send messages
-        for i in xrange(1000000):
-            # latencies should be draw from lognormal
-            # for testing use one number and then uniform
+        kafka_producer = KafkaProducer(bootstrap_servers=self.bootstrap_servers)
+        devices = ['type1', 'type2', 'type3', 'type4'] # device types
+
+        # send latency messages with device types as keys
+        for i in xrange(self.num_messages):
             device = random.choice(devices)
-            message = json.dumps({'message_num': i, 'device': device, 'latency': uniform()})
-            # message = """129.94.144.152 - - [01/Jul/1995:00:00:17 -0400] "GET /images/ksclogo-medium.gif HTTP/1.0" 304 0 {}""".format(i)
-            # kafka_producer.send(topic, message)
-            # try sending key-value kafka message with 4 partitions
-            kafka_producer.send(topic, key=device, value=message)
-            time.sleep(.02)
-            print message + '\n' + 120*'=' + '\n'
+            message = json.dumps({'message_num': i,
+                                  'device': device,
+                                  'latency': lognormal()})
+            kafka_producer.send(self.topic, key=device, value=message)
+            time.sleep(self.pause_time) # rest time between messages
+
+            # print message every second to terminal
+            if i % int(round(1/float(pause_time))) == 0:
+                print message + '\n' + 120*'=' + '\n'
+
 
 if __name__ == "__main__":
-    # logging - might turn this on later
-    """
-    logging.basicConfig(
-        format='%(asctime)s.%(msecs)s:%(name)s:%(thread)d:%(levelname)s:%(process)d:%(message)s',
-        level=logging.INFO
-        )
-    """
-    producer = Producer() # thread instance
+
+    print "Stream run time:", round(run_time/60.,1), "minutes"
+    print "Messages per second:", msgs_per_second
+    print "Total number of messages:", num_messages
+    print "Pause time:", pause_time
+
+    producer = Producer(topic, bootstrap_servers, num_messages, pause_time)
     producer.start() # calls run method
-    time.sleep(500) # how many seconds to let producer thread run, since
-                   # daemon producer thread is killed once main program ends
+    time.sleep(run_time)

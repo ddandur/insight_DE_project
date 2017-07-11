@@ -1,169 +1,142 @@
+"""
+Spark stream processor.
+
+Takes in latency scalar values from the Kafka 'Latency' topic,
+computes t-digest summary of data from microbatch interval,
+and records percentiles derived from this summary into Redis.
+The summary is updated at the microbatch interval in Redis, allowing
+for a real-time dashboard display.
+
+The t-digest Python library used is based on the version here:
+https://github.com/CamDavidsonPilon/tdigest. Some changes were
+made to this library to allow for more flexible merging and more
+control over compression.
+
+Several t-digests can be computed in parallel in Spark, with
+intent of either merging the digests at end of Spark job or storing them
+separately.
+
+
+To start stream from command line, go to directory that contains this
+file (name of file is at end of command) and enter:
+
+sudo $SPARK_HOME/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.1.0 cleaned_spark_stream.py
+"""
+
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
 import redis
 import json
-from tdigest import TDigest
+# tdigest import under "sc.addPyFile" command below
 
-# set up function to transfer stream to redis database - take from spark streaming documentation
-# this function can be further optimized by using a pool - see spark documentation
 
-def sendPartition(itera):
-    redis_server = 'localhost'
-    # redis_server = 'ec2-34-210-183-208.us-west-2.compute.amazonaws.com' # master
-    redis_table = redis.StrictRedis(redis_server, port=6379, db=0)
-    for record in itera:
-        redis_table.set(record, record)
+##########################################
+# Spark stream parameters
+##########################################
 
-def write_to_redis(rdd):
-    # write rdd from dstream to redis
-    redis_server = 'localhost'
-    redis_table = redis.StrictRedis(redis_server, port=6379, db=0)
+microbatch_size = 5 # 5 seconds
 
-    # collect rdd back to master node as python iterable
-    # this appears to be a single digest list of tuples 
-    # need to write to database under a single key
-    list_of_digests = rdd.collect()
-    print "Type of list_of_digests: ", type(list_of_digests)
-    print list_of_digests
-
-    # add some more lines to actually write to redis
-    redis_table.set("current_digest", list_of_digests)
-
-# initialize stream
-sc = SparkContext(appName="NASA-logs") # can tune this to cluster later
-sc.setLogLevel("WARN") # make less logs to stdout
-ssc = StreamingContext(sc, 5) # 5 second microbatch duration for Dstream
-# ssc.checkpoint("checkpoint") - leave out checkpointing for now
-
-# set up connection with kafka
+# Kafka
 brokers = "ec2-34-210-183-208.us-west-2.compute.amazonaws.com:9092" # master
-topic = 'NASA-logs'
+topic = 'Latency'
 
-kafka_stream = KafkaUtils.createDirectStream(ssc,
-                                             [topic],
-                                             {"metadata.broker.list": brokers})
+# Redis
+redis_server = 'localhost'
+
 ##########################################
-# HELPER FUNCTIONS
 ##########################################
 
-# compute sum  across partition
-def do_sum(values):
-    summ = 0
-    for item in values:
-        summ += item
-    return [summ]
 
-# print out how many partitions per RDD
-def print_partitions(rdd):
-    print rdd.getNumPartitions()
+##########################################
+# Helper functions
+##########################################
 
-# print out contents of RDD
-
-def print_RDD_contents(rdd):
-    for x in rdd.collect():
-        print x
-
-# returns list of tuples of form (location, weight)
-# that represent a t-digest - this is for convenient
-# storage in redis (will need to be loaded into tdigest data
-# structure again when called from redis)
 def compute_tdigest(values):
-    if not values: 
+    """ Returns list of percentiles and their values as computed from t-digest.
+
+    rtype: [[int, float], [int, float], ...]
+
+    For example,
+
+    [[0, 0.01], [5, 0.13], [10, 1.39], ..., [95, 5.74]]
+    """
+    ####################################################
+    # create t-digest tdig from values data
+    ####################################################
+    if not values:
         return []
     tdig = TDigest()
     all_values = [x for x in values]
     tdig.batch_update(all_values)
-    tdig_tuples_list = [(item[0], item[1].count) for item in tdig.C.items()]
-    return tdig_tuples_list
 
-# simple transformation on rdd to extract only text
-just_words = kafka_stream.map(lambda row: row[1])
-# stream records into redis database
+    ####################################################
+    # compute list of percentiles using tdig
+    ####################################################
+    all_percentiles = []
+    for perc in range(0, 100, 5):
+        all_percentiles.append([perc, tdig.percentile(perc)])
 
-#################################################
-# TRY DELETING THIS LINE - MAYBE TOO MANY REDIS CONNECTIONS?
-################################################
+    return all_percentiles
 
-# just_words.foreachRDD(lambda rdd: rdd.foreachPartition(sendPartition))
+def write_to_redis(rdd):
+    """ Write t-digest rdd percentile list to Redis.
+    """
 
-# convert words from json into dictionary object in stream of RDDs
-# schema for this dictionary is
-# {u'device': u'type2', u'latency': 2, u'message_num': 189}
-dict_data = just_words.map(json.loads)
+    redis_table = redis.StrictRedis(redis_server, port=6379, db=0)
+    # collect rdd back to master node as python iterable
+    list_of_digests = rdd.collect()
+    # write to redis
+    redis_table.set("current_digest", list_of_digests)
 
-# latencies are list of integers
-latencies = dict_data.map(lambda x: x["latency"])
+##########################################
+# Debugging functions
+##########################################
 
+def print_partitions(rdd):
+    """ Print out how many partitions in RDD
 
-#####################################################
-# TRY KEY-VALUE PAIRING
-#####################################################
+    Example usage: digests.foreachRDD(print_partitions)
+    """
+    print rdd.getNumPartitions()
 
-# create key-value partition (using tuples) for splitting - key is device type
-device_keyed_rdd = dict_data.map(lambda x: (x["device"], x))
-# split this new rdd on the device key
-device_keyed_rdd = device_keyed_rdd.partitionBy(4)
-# print how many partitions in this rdd
-device_keyed_rdd.foreachRDD(print_partitions)
-# try mapping partitions with pairRDD device_keyed_rdd
-partitioned_digests = device_keyed_rdd.mapPartitions(compute_tdigest, preservesPartitioning=True)
-# there is an error when pprint() is called on partitioned_digests
-# try collecting and printing out the output
+def print_RDD_contents(rdd):
+    """ Print out contents of RDD
 
-####################################################
-# THIS LINE CAUSES PROBLEM
-####################################################
-# partitioned_digests.foreachRDD(write_to_redis)
-####################################################
+    Example usage: digests.foreachRDD(print_RDD_contents)
+    """
+    for x in rdd.collect():
+        print x
 
-# try the following after testing above function
-# UPDATE: this is currently failing, not sure why
-# For now, check partition computation accuracy by
-# storing in redis and querying redis itself
+##########################################
+# Spark job
+##########################################
 
-# partitioned_digests.foreachRDD(print_RDD_contents)
+# set Spark context
+sc = SparkContext(appName="Latency")
+sc.setLogLevel("WARN")
 
-# print out current format of device_keyed_rdd
-#  device_keyed_rdd.pprint()
+sc.addPyFile("../tdigest/tdigest_altered.py") # import custom tdigest class
+from tdigest_altered import TDigest
 
-# try printing out t-digests by partition
-# keyed_digests = device_keyed_rdd.mapPartitions(compute_keyed_tdigest)
-# keyed_digests.pprint()
+ssc = StreamingContext(sc, microbatch_size)
 
-# compute tdigest of each partition using mapPartitions
+# create D-Stream from Kafka topic
+kafka_stream = KafkaUtils.createDirectStream(ssc,
+                                             [topic],
+                                             {"metadata.broker.list": brokers})
+
+# extract latency data (combined across devices)
+# json schema: {u'device': u'type2', u'latency': 2.487, u'message_num': 189}
+latencies = kafka_stream.map(lambda row: row[1])\
+                        .map(json.loads)\
+                        .map(lambda x: x["latency"])
+
+# compute tdigest of each partition and write to redis
 digests = latencies.mapPartitions(compute_tdigest)
-
-# convert digest
-
 digests.pprint()
-
-# print out how many partitions per rdd
-digests.foreachRDD(print_partitions)
-# print contents of digests
-digests.foreachRDD(print_RDD_contents)
-
-##########################################################
-# TRY WRITING TO REDIS WITH JUST REGULAR DIGEST DSTREAM
-##########################################################
 digests.foreachRDD(write_to_redis)
-
-
-
-
-# UPDATE: doing command below causes an error in spark - seems to be problem with
-# sending distributed partitions to redis
-# OPTIONS: either do no partition (just to get pipeline) or
-# try doing a collect() before writing
-
-# partitioned_digests.foreachRDD(lambda rdd: rdd.foreachPartition(sendPartition))
-
-# redis_table = redis.StrictRedis(host='localhost', port=6379, db=0)
-# redis_table.set(just_words, just_words)
 
 # start stream
 ssc.start()
 ssc.awaitTermination()
-
-# running command: sudo $SPARK_HOME/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.1.0 spark_stream_processor.py
-
