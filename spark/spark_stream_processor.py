@@ -14,7 +14,11 @@ control over compression.
 
 Several t-digests can be computed in parallel in Spark, with
 intent of either merging the digests at end of Spark job or storing them
-separately.
+separately. This example draws from a Kafka topic with a single partition,
+but a natural extension is to use a Kafka topic with multiple partition
+(e.g. with a partition split based on device type). The t-digests can then
+be computed in parallel in Spark and then either merged in Spark or stored
+separately for later querying.
 
 
 To start stream from command line, go to directory that contains this

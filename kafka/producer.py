@@ -3,6 +3,9 @@ Kafka producer file.
 
 Produces a simple stream of simulated latency data.
 Latency values follow a standard lognormal distribution.
+This example uses a Kafka topic with a single partition, but a
+natural extension is to use multiple partitions in a Kafka topic
+that feed in to partitioned RDDs in the subsequent Spark Streaming job.
 
 In a more realistic setting the latency values would be
 computed from a join operation on some sort of ID,
